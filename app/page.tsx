@@ -19,7 +19,7 @@ export default function Home() {
                 <h1 className="max-w-3xl text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl lg:text-6xl">
                   Centralize the prompts your team actually uses.
                 </h1>
-                <p className="max-w-2xl text-lg leading-8 text-slate-600 sm:text-xl">
+                <p className="max-w-2xl text-lg leading-8 text-slate-800 sm:text-xl">
                   PromptBase helps office teams organize reusable prompts, track versions,
                   and keep high-performing workflows easy to find.
                 </p>
@@ -37,41 +37,41 @@ export default function Home() {
             <div className="grid gap-4 sm:grid-cols-3">
               {mockStats.map((stat) => (
                 <Card key={stat.label} className="p-5">
-                  <div className="text-sm font-medium text-slate-500">{stat.label}</div>
+                  <div className="text-sm font-medium text-slate-800">{stat.label}</div>
                   <div className="mt-2 text-3xl font-semibold tracking-tight text-slate-950">
                     {stat.value}
                   </div>
-                  <p className="mt-2 text-sm leading-6 text-slate-600">{stat.description}</p>
+                  <p className="mt-2 text-sm leading-6 text-slate-800">{stat.description}</p>
                 </Card>
               ))}
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
               <Card className="p-6">
-                <div className="text-sm font-medium text-slate-500">
+                <div className="text-sm font-medium text-slate-800">
                   Why teams choose PromptBase
                 </div>
-                <ul className="mt-4 space-y-3 text-sm leading-6 text-slate-700">
+                <ul className="mt-4 space-y-3 text-sm leading-6 text-slate-800">
                   <li>Reusable prompt templates for support, sales, and ops.</li>
                   <li>Consistent metadata, tags, and version history.</li>
                   <li>Fast search and favorites for everyday access.</li>
                 </ul>
               </Card>
               <Card className="overflow-hidden p-0">
-                <div className="border-b border-slate-200 bg-slate-50 px-6 py-4 text-sm font-medium text-slate-600">
+                <div className="border-b border-slate-200 bg-slate-50 px-6 py-4 text-sm font-medium text-slate-800">
                   Team workflow snapshot
                 </div>
                 <div className="space-y-3 p-6">
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-slate-500">Published prompts</span>
+                    <span className="text-slate-800">Published prompts</span>
                     <span className="font-medium text-slate-950">128</span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-slate-500">Favorites this week</span>
+                    <span className="text-slate-800">Favorites this week</span>
                     <span className="font-medium text-slate-950">1,284</span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-slate-500">Admin reviews</span>
+                    <span className="text-slate-800">Admin reviews</span>
                     <span className="font-medium text-slate-950">18 pending</span>
                   </div>
                 </div>
@@ -81,7 +81,7 @@ export default function Home() {
 
           <Card className="space-y-6 p-6 lg:sticky lg:top-6">
             <div className="space-y-2">
-              <p className="text-sm font-medium text-slate-500">Featured prompts</p>
+              <p className="text-sm font-medium text-slate-800">Featured prompts</p>
               <h2 className="text-2xl font-semibold tracking-tight text-slate-950">
                 High-value prompts your team can reuse today.
               </h2>
@@ -116,22 +116,22 @@ export default function Home() {
           ].map((item) => (
             <Card key={item.title} className="p-6">
               <h3 className="text-lg font-semibold text-slate-950">{item.title}</h3>
-              <p className="mt-2 text-sm leading-6 text-slate-600">{item.description}</p>
+              <p className="mt-2 text-sm leading-6 text-slate-800">{item.description}</p>
             </Card>
           ))}
         </div>
       </section>
 
       <section className="mx-auto w-full max-w-7xl px-4 pb-20 sm:px-6 lg:px-8 lg:pb-28">
-        <Card className="flex flex-col gap-6 overflow-hidden bg-slate-950 p-8 text-white lg:flex-row lg:items-center lg:justify-between lg:p-10">
+        <Card className="flex flex-col gap-6 overflow-hidden bg-slate-950 p-8 lg:flex-row lg:items-center lg:justify-between lg:p-10">
           <div className="max-w-2xl space-y-3">
-            <Badge variant="outline" className="border-white/20 text-white">
+            <Badge variant="outline" className="border-white/20 text-slate-800">
               Ready for your workspace
             </Badge>
-            <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">
+            <h2 className="text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">
               Launch PromptBase with a clean structure today.
             </h2>
-            <p className="text-sm leading-6 text-slate-100 sm:text-base">
+            <p className="text-sm leading-6 text-slate-800 sm:text-base">
               You can start exploring the dashboard, prompt library, favorites, and admin screens immediately using the included mock data.
             </p>
           </div>
