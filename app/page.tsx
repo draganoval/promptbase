@@ -131,7 +131,7 @@ export default function Home() {
             <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">
               Launch PromptBase with a clean structure today.
             </h2>
-            <p className="text-sm leading-6 text-slate-300 sm:text-base">
+            <p className="text-sm leading-6 text-slate-100 sm:text-base">
               You can start exploring the dashboard, prompt library, favorites, and admin screens immediately using the included mock data.
             </p>
           </div>

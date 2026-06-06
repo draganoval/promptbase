@@ -36,8 +36,8 @@ export function Navbar({ activeHref, showAuthActions = false }: NavbarProps) {
                 href={item.href}
                 className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
                   isActive
-                    ? "bg-slate-950 text-white"
-                    : "text-slate-600 hover:bg-slate-100 hover:text-slate-950"
+                    ? "bg-slate-950 !text-white"
+                    : "text-slate-700 hover:bg-slate-100 hover:text-slate-950"
                 }`}
               >
                 {item.label}
@@ -56,7 +56,7 @@ export function Navbar({ activeHref, showAuthActions = false }: NavbarProps) {
             </>
           ) : (
             <>
-              <Button href="/prompts/new" variant="secondary" className="hidden sm:inline-flex">
+              <Button href="/prompts/new" className="hidden sm:inline-flex !text-white">
                 Create prompt
               </Button>
               <Link

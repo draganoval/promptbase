@@ -61,13 +61,13 @@ export default function RegisterPage() {
         <Card className="order-1 overflow-hidden p-0 lg:order-2">
           <div className="flex h-full min-h-[520px] flex-col justify-between bg-gradient-to-br from-slate-950 via-slate-900 to-teal-900 p-8 text-white">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-200">
                 Built for teams
               </p>
               <h2 className="mt-4 max-w-lg text-4xl font-semibold tracking-tight">
                 A polished SaaS foundation for prompt operations.
               </h2>
-              <p className="mt-4 max-w-lg text-sm leading-6 text-slate-300">
+              <p className="mt-4 max-w-lg text-sm leading-6 text-slate-100">
                 Give your team a shared prompt library, admin controls, and a clean place to work with AI-generated content.
               </p>
             </div>
@@ -77,7 +77,7 @@ export default function RegisterPage() {
                 "Shared favorites",
                 "Admin oversight",
               ].map((item) => (
-                <div key={item} className="rounded-3xl border border-white/10 bg-white/5 p-4 text-sm text-slate-200">
+                <div key={item} className="rounded-3xl border border-white/15 bg-white/5 p-4 text-sm text-white">
                   {item}
                 </div>
               ))}

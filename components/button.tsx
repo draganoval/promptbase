@@ -13,10 +13,10 @@ type ButtonProps = {
 
 const variantStyles: Record<ButtonVariant, string> = {
   primary:
-    "bg-slate-950 text-white shadow-sm shadow-slate-950/10 hover:-translate-y-0.5 hover:bg-slate-800",
+    "bg-slate-950 !text-white shadow-sm shadow-slate-950/15 hover:-translate-y-0.5 hover:bg-slate-800 hover:!text-white",
   secondary:
-    "border border-slate-200 bg-white text-slate-900 hover:border-slate-300 hover:bg-slate-50",
-  ghost: "text-slate-600 hover:bg-slate-100 hover:text-slate-950",
+    "border border-slate-300 bg-white text-slate-950 hover:border-slate-400 hover:bg-slate-50",
+  ghost: "text-slate-800 hover:bg-slate-100 hover:text-slate-950",
 };
 
 const sizeStyles = {
@@ -34,7 +34,7 @@ export function Button({
   type = "button",
 }: ButtonProps) {
   const baseStyles =
-    "inline-flex items-center justify-center gap-2 rounded-full font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent";
+    "inline-flex items-center justify-center gap-2 rounded-full font-semibold whitespace-nowrap transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent";
   const classes = `${baseStyles} ${variantStyles[variant]} ${sizeStyles[size]} ${className}`.trim();
 
   if (href) {
