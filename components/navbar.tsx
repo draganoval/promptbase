@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/button";
@@ -15,16 +15,18 @@ type NavbarProps = {
 export function Navbar({ activeHref, showAuthActions = false }: NavbarProps) {
   const router = useRouter();
   const [initials, setInitials] = useState("U");
+  const [role, setRole] = useState<string | null>(null);
 
   useEffect(() => {
-    const savedUser = window.localStorage.getItem("user") ?? window.localStorage.getItem("promptbase_user");
+    const savedUser = window.localStorage.getItem("user");
 
     if (!savedUser) {
+      setRole(null);
       return;
     }
 
     try {
-      const parsedUser = JSON.parse(savedUser) as { name?: string; email?: string };
+      const parsedUser = JSON.parse(savedUser) as { name?: string; email?: string; role?: string };
       const source = parsedUser.name?.trim() || parsedUser.email?.trim() || "U";
       const parts = source.split(/\s+/).filter(Boolean);
       const derivedInitials =
@@ -33,8 +35,10 @@ export function Navbar({ activeHref, showAuthActions = false }: NavbarProps) {
           : source.slice(0, 2);
 
       setInitials(derivedInitials.toUpperCase());
+      setRole(parsedUser.role ?? null);
     } catch {
       setInitials("U");
+      setRole(null);
     }
   }, []);
 
@@ -96,6 +100,30 @@ export function Navbar({ activeHref, showAuthActions = false }: NavbarProps) {
               <Button href="/prompts/new" className="hidden sm:inline-flex !text-white">
                 Create prompt
               </Button>
+              {role === "admin" ? (
+                <>
+                  <Link
+                    href="/admin/users"
+                    className={`hidden rounded-full px-4 py-2 text-sm font-medium transition-colors lg:inline-flex ${
+                      activeHref === "/admin/users"
+                        ? "bg-slate-950 !text-white"
+                        : "text-slate-700 hover:bg-slate-100 hover:text-slate-950"
+                    }`}
+                  >
+                    Admin Users
+                  </Link>
+                  <Link
+                    href="/admin/categories"
+                    className={`hidden rounded-full px-4 py-2 text-sm font-medium transition-colors lg:inline-flex ${
+                      activeHref === "/admin/categories"
+                        ? "bg-slate-950 !text-white"
+                        : "text-slate-700 hover:bg-slate-100 hover:text-slate-950"
+                    }`}
+                  >
+                    Admin Categories
+                  </Link>
+                </>
+              ) : null}
               <div className="ml-2 flex shrink-0 items-center gap-2 whitespace-nowrap pr-1 sm:pr-0">
                 <Link
                   href="/profile"
