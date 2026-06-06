@@ -13,6 +13,8 @@ type SidebarProps = {
 export function Sidebar({ activeHref }: SidebarProps) {
   const [role, setRole] = useState<string | null>(null);
 
+  const isAdmin = role?.toLowerCase() === "admin";
+
   useEffect(() => {
     const savedUser = window.localStorage.getItem("user");
 
@@ -61,7 +63,7 @@ export function Sidebar({ activeHref }: SidebarProps) {
           </nav>
         </div>
 
-        {role === "admin" ? (
+        {isAdmin ? (
           <div className="rounded-3xl border border-slate-200 bg-slate-950 p-4 text-white shadow-[0_20px_60px_-35px_rgba(15,23,42,0.35)]">
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-200">
               Administration

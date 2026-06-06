@@ -17,6 +17,8 @@ export function Navbar({ activeHref, showAuthActions = false }: NavbarProps) {
   const [initials, setInitials] = useState("U");
   const [role, setRole] = useState<string | null>(null);
 
+  const isAdmin = role?.toLowerCase() === "admin";
+
   useEffect(() => {
     const savedUser = window.localStorage.getItem("user");
 
@@ -100,7 +102,7 @@ export function Navbar({ activeHref, showAuthActions = false }: NavbarProps) {
               <Button href="/prompts/new" className="hidden sm:inline-flex !text-white">
                 Create prompt
               </Button>
-              {role === "admin" ? (
+              {isAdmin ? (
                 <>
                   <Link
                     href="/admin/users"
