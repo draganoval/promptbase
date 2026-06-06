@@ -1,15 +1,73 @@
+"use client";
+
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState, type FormEvent } from "react";
 
 import { Badge } from "@/components/badge";
 import { Button } from "@/components/button";
 import { Card } from "@/components/card";
 import { Input } from "@/components/input";
 
-export const metadata = {
-  title: "Login",
-};
-
 export default function LoginPage() {
+  const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setIsSubmitting(true);
+    setSuccessMessage("");
+    setErrorMessage("");
+
+    try {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          password,
+        }),
+      });
+
+      const data = (await response.json()) as {
+        message?: string;
+        error?: string;
+        token?: string;
+        user?: unknown;
+      };
+
+      if (!response.ok) {
+        throw new Error(data.error ?? "Unable to login.");
+      }
+
+      if (typeof window !== "undefined") {
+        if (data.token) {
+          localStorage.setItem("promptbase_token", data.token);
+        }
+
+        if (data.user) {
+          localStorage.setItem("promptbase_user", JSON.stringify(data.user));
+        }
+      }
+
+      setSuccessMessage(data.message ?? "Login successful. Redirecting to dashboard...");
+      window.setTimeout(() => {
+        router.push("/dashboard");
+      }, 900);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unable to login.";
+      setErrorMessage(message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-7xl items-center px-4 py-10 sm:px-6 lg:px-8">
       <div className="grid w-full gap-6 lg:grid-cols-[0.9fr_1.1fr]">
@@ -22,14 +80,26 @@ export default function LoginPage() {
             Access your workspace, review team prompts, and keep favorite prompts at your fingertips.
           </p>
 
-          <form className="mt-8 space-y-5">
+          <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
             <div>
               <label className="mb-2 block text-sm font-medium text-slate-600">Email</label>
-              <Input type="email" placeholder="name@company.com" />
+              <Input
+                type="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                placeholder="name@company.com"
+                autoComplete="email"
+              />
             </div>
             <div>
               <label className="mb-2 block text-sm font-medium text-slate-600">Password</label>
-              <Input type="password" placeholder="••••••••" />
+              <Input
+                type="password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                placeholder="••••••••"
+                autoComplete="current-password"
+              />
             </div>
             <div className="flex items-center justify-between text-sm">
               <label className="flex items-center gap-2 text-slate-600">
@@ -40,8 +110,18 @@ export default function LoginPage() {
                 Forgot password?
               </Link>
             </div>
-            <Button type="submit" className="w-full">
-              Sign in
+            {errorMessage ? (
+              <p className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">
+                {errorMessage}
+              </p>
+            ) : null}
+            {successMessage ? (
+              <p className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
+                {successMessage}
+              </p>
+            ) : null}
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
+              {isSubmitting ? "Signing in..." : "Sign in"}
             </Button>
           </form>
 

@@ -37,10 +37,25 @@ export default function RegisterPage() {
         }),
       });
 
-      const data = (await response.json()) as { message?: string; error?: string };
+      const data = (await response.json()) as {
+        message?: string;
+        error?: string;
+        token?: string;
+        user?: unknown;
+      };
 
       if (!response.ok) {
         throw new Error(data.error ?? "Unable to register user.");
+      }
+
+      if (typeof window !== "undefined") {
+        if (data.token) {
+          localStorage.setItem("promptbase_token", data.token);
+        }
+
+        if (data.user) {
+          localStorage.setItem("promptbase_user", JSON.stringify(data.user));
+        }
       }
 
       setSuccessMessage(data.message ?? "Registration successful. Redirecting to dashboard...");
