@@ -1,15 +1,60 @@
+"use client";
+
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState, type FormEvent } from "react";
 
 import { Badge } from "@/components/badge";
 import { Button } from "@/components/button";
 import { Card } from "@/components/card";
 import { Input } from "@/components/input";
 
-export const metadata = {
-  title: "Register",
-};
-
 export default function RegisterPage() {
+  const router = useRouter();
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setIsSubmitting(true);
+    setSuccessMessage("");
+    setErrorMessage("");
+
+    try {
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name,
+          email,
+          password,
+        }),
+      });
+
+      const data = (await response.json()) as { message?: string; error?: string };
+
+      if (!response.ok) {
+        throw new Error(data.error ?? "Unable to register user.");
+      }
+
+      setSuccessMessage(data.message ?? "Registration successful. Redirecting to dashboard...");
+      window.setTimeout(() => {
+        router.push("/dashboard");
+      }, 900);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unable to register user.";
+      setErrorMessage(message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-7xl items-center px-4 py-10 sm:px-6 lg:px-8">
       <div className="grid w-full gap-6 lg:grid-cols-[1.1fr_0.9fr]">
@@ -22,31 +67,48 @@ export default function RegisterPage() {
             Start organizing prompts with a clean workspace, simple permissions, and a polished team-ready interface.
           </p>
 
-          <form className="mt-8 space-y-5">
-            <div className="grid gap-5 sm:grid-cols-2">
-              <div>
-                <label className="mb-2 block text-sm font-medium text-slate-600">First name</label>
-                <Input placeholder="Ava" />
-              </div>
-              <div>
-                <label className="mb-2 block text-sm font-medium text-slate-600">Last name</label>
-                <Input placeholder="Chen" />
-              </div>
+          <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
+            <div>
+              <label className="mb-2 block text-sm font-medium text-slate-600">Name</label>
+              <Input
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+                placeholder="Ava Chen"
+                autoComplete="name"
+              />
             </div>
             <div>
-              <label className="mb-2 block text-sm font-medium text-slate-600">Work email</label>
-              <Input type="email" placeholder="name@company.com" />
+              <label className="mb-2 block text-sm font-medium text-slate-600">Email</label>
+              <Input
+                type="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                placeholder="name@company.com"
+                autoComplete="email"
+              />
             </div>
             <div>
               <label className="mb-2 block text-sm font-medium text-slate-600">Password</label>
-              <Input type="password" placeholder="Create a password" />
+              <Input
+                type="password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                placeholder="Create a password"
+                autoComplete="new-password"
+              />
             </div>
-            <div>
-              <label className="mb-2 block text-sm font-medium text-slate-600">Company</label>
-              <Input placeholder="PromptBase" />
-            </div>
-            <Button type="submit" className="w-full">
-              Create account
+            {errorMessage ? (
+              <p className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">
+                {errorMessage}
+              </p>
+            ) : null}
+            {successMessage ? (
+              <p className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
+                {successMessage}
+              </p>
+            ) : null}
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
+              {isSubmitting ? "Creating account..." : "Create account"}
             </Button>
           </form>
 

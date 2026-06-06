@@ -1,15 +1,25 @@
 import Link from "next/link";
+import type { AnchorHTMLAttributes, ButtonHTMLAttributes, ReactNode } from "react";
 
 type ButtonVariant = "primary" | "secondary" | "ghost";
 
-type ButtonProps = {
-  children: React.ReactNode;
-  href?: string;
+type CommonProps = {
+  children: ReactNode;
   variant?: ButtonVariant;
   size?: "sm" | "md" | "lg";
   className?: string;
-  type?: "button" | "submit";
+  disabled?: boolean;
 };
+
+type LinkButtonProps = CommonProps & {
+  href: string;
+  type?: never;
+};
+
+type NativeButtonProps = CommonProps &
+  Omit<ButtonHTMLAttributes<HTMLButtonElement>, "className" | "children"> & {
+    href?: never;
+  };
 
 const variantStyles: Record<ButtonVariant, string> = {
   primary:
@@ -27,26 +37,30 @@ const sizeStyles = {
 
 export function Button({
   children,
-  href,
   variant = "primary",
   size = "md",
   className = "",
-  type = "button",
-}: ButtonProps) {
+  disabled = false,
+  ...props
+}: LinkButtonProps | NativeButtonProps) {
   const baseStyles =
-    "inline-flex items-center justify-center gap-2 rounded-full font-semibold whitespace-nowrap transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent";
+    "inline-flex items-center justify-center gap-2 rounded-full font-semibold whitespace-nowrap transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent disabled:pointer-events-none disabled:opacity-60";
   const classes = `${baseStyles} ${variantStyles[variant]} ${sizeStyles[size]} ${className}`.trim();
 
-  if (href) {
+  if ("href" in props) {
+    const { href, ...linkProps } = props as LinkButtonProps;
+
     return (
-      <Link href={href} className={classes}>
+      <Link aria-disabled={disabled} className={classes} href={href} {...(linkProps as AnchorHTMLAttributes<HTMLAnchorElement>)}>
         {children}
       </Link>
     );
   }
 
+  const buttonProps = props as NativeButtonProps;
+
   return (
-    <button type={type} className={classes}>
+    <button className={classes} disabled={disabled} {...buttonProps}>
       {children}
     </button>
   );
