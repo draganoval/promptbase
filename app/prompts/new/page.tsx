@@ -1,3 +1,9 @@
+"use client";
+
+import type { FormEvent } from "react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+
 import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/button";
 import { Card } from "@/components/card";
@@ -5,11 +11,54 @@ import { Input } from "@/components/input";
 import { PageHeader } from "@/components/page-header";
 import { Textarea } from "@/components/textarea";
 
-export const metadata = {
-  title: "Create Prompt",
-};
-
 export default function CreatePromptPage() {
+  const router = useRouter();
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [promptText, setPromptText] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setLoading(true);
+    setSuccessMessage("");
+    setErrorMessage("");
+
+    try {
+      const response = await fetch("/api/prompts", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          title,
+          description,
+          promptText,
+          categoryId: 1,
+          status: "published",
+        }),
+      });
+
+      const data = (await response.json()) as { error?: string; message?: string };
+
+      if (!response.ok) {
+        throw new Error(data.error ?? "Failed to create prompt.");
+      }
+
+      setSuccessMessage(data.message ?? "Prompt created successfully.");
+      setTitle("");
+      setDescription("");
+      setPromptText("");
+      router.push("/library");
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "Failed to create prompt.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <AppShell activeHref="/library">
       <PageHeader
@@ -21,42 +70,74 @@ export default function CreatePromptPage() {
             <Button href="/library" variant="secondary">
               Cancel
             </Button>
-            <Button>Save prompt</Button>
+            <Button form="create-prompt-form" type="submit" disabled={loading}>
+              {loading ? "Saving..." : "Save prompt"}
+            </Button>
           </>
         }
       />
 
       <section className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
-        <Card className="space-y-6 p-6">
-          <div className="grid gap-5 sm:grid-cols-2">
-            <div>
-              <label className="mb-2 block text-sm font-medium text-slate-600">Title</label>
-              <Input placeholder="Prompt title" />
+        <form id="create-prompt-form" className="space-y-6" onSubmit={handleSubmit}>
+          <Card className="space-y-6 p-6">
+            <div className="grid gap-5 sm:grid-cols-2">
+              <div>
+                <label className="mb-2 block text-sm font-medium text-slate-600">Title</label>
+                <Input
+                  value={title}
+                  onChange={(event) => setTitle(event.target.value)}
+                  placeholder="Prompt title"
+                  disabled={loading}
+                />
+              </div>
+              <div>
+                <label className="mb-2 block text-sm font-medium text-slate-600">Category</label>
+                <Input placeholder="Select category" value="Category 1" readOnly />
+              </div>
+            </div>
+            <div className="grid gap-5 sm:grid-cols-2">
+              <div>
+                <label className="mb-2 block text-sm font-medium text-slate-600">Owner</label>
+                <Input placeholder="Assigned owner" readOnly />
+              </div>
+              <div>
+                <label className="mb-2 block text-sm font-medium text-slate-600">Status</label>
+                <Input placeholder="Draft / Review / Published" value="Published" readOnly />
+              </div>
             </div>
             <div>
-              <label className="mb-2 block text-sm font-medium text-slate-600">Category</label>
-              <Input placeholder="Select category" />
+              <label className="mb-2 block text-sm font-medium text-slate-600">Summary</label>
+              <Textarea
+                value={description}
+                onChange={(event) => setDescription(event.target.value)}
+                placeholder="Short description of the prompt purpose"
+                disabled={loading}
+              />
             </div>
-          </div>
-          <div className="grid gap-5 sm:grid-cols-2">
             <div>
-              <label className="mb-2 block text-sm font-medium text-slate-600">Owner</label>
-              <Input placeholder="Assigned owner" />
+              <label className="mb-2 block text-sm font-medium text-slate-600">Prompt content</label>
+              <Textarea
+                rows={10}
+                value={promptText}
+                onChange={(event) => setPromptText(event.target.value)}
+                placeholder="Write the actual prompt instructions here"
+                disabled={loading}
+              />
             </div>
-            <div>
-              <label className="mb-2 block text-sm font-medium text-slate-600">Status</label>
-              <Input placeholder="Draft / Review / Published" />
-            </div>
-          </div>
-          <div>
-            <label className="mb-2 block text-sm font-medium text-slate-600">Summary</label>
-            <Textarea placeholder="Short description of the prompt purpose" />
-          </div>
-          <div>
-            <label className="mb-2 block text-sm font-medium text-slate-600">Prompt content</label>
-            <Textarea rows={10} placeholder="Write the actual prompt instructions here" />
-          </div>
-        </Card>
+
+            {successMessage ? (
+              <p className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
+                {successMessage}
+              </p>
+            ) : null}
+
+            {errorMessage ? (
+              <p className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">
+                {errorMessage}
+              </p>
+            ) : null}
+          </Card>
+        </form>
 
         <div className="space-y-6">
           <Card className="p-6">
