@@ -15,17 +15,27 @@ type NavbarProps = {
 export function Navbar({ activeHref, showAuthActions = false }: NavbarProps) {
   const router = useRouter();
   const [initials, setInitials] = useState("U");
+  const [userName, setUserName] = useState<string | null>(null);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
   const [role, setRole] = useState<string | null>(null);
+  const [hasSession, setHasSession] = useState(false);
 
   const isAdmin = role?.toLowerCase() === "admin";
 
   useEffect(() => {
+    const savedToken = window.localStorage.getItem("token");
     const savedUser = window.localStorage.getItem("user");
 
-    if (!savedUser) {
+    if (!savedToken || !savedUser) {
+      setHasSession(false);
       setRole(null);
+      setUserName(null);
+      setUserEmail(null);
+      setInitials("U");
       return;
     }
+
+    setHasSession(true);
 
     try {
       const parsedUser = JSON.parse(savedUser) as { name?: string; email?: string; role?: string };
@@ -37,18 +47,26 @@ export function Navbar({ activeHref, showAuthActions = false }: NavbarProps) {
           : source.slice(0, 2);
 
       setInitials(derivedInitials.toUpperCase());
+      setUserName(parsedUser.name?.trim() ?? null);
+      setUserEmail(parsedUser.email?.trim() ?? null);
       setRole(parsedUser.role ?? null);
     } catch {
       setInitials("U");
+      setUserName(null);
+      setUserEmail(null);
       setRole(null);
+      setHasSession(false);
     }
   }, []);
 
   function handleLogout() {
     window.localStorage.removeItem("token");
     window.localStorage.removeItem("user");
-    window.localStorage.removeItem("promptbase_token");
-    window.localStorage.removeItem("promptbase_user");
+    setHasSession(false);
+    setInitials("U");
+    setUserName(null);
+    setUserEmail(null);
+    setRole(null);
     router.push("/login");
   }
 
@@ -90,7 +108,7 @@ export function Navbar({ activeHref, showAuthActions = false }: NavbarProps) {
         </nav>
 
         <div className="flex items-center gap-3">
-          {showAuthActions ? (
+          {showAuthActions || !hasSession ? (
             <>
               <Button href="/login" variant="ghost" className="hidden sm:inline-flex">
                 Log in
@@ -134,6 +152,9 @@ export function Navbar({ activeHref, showAuthActions = false }: NavbarProps) {
                 >
                   {initials}
                 </Link>
+                <div className="hidden min-w-0 lg:block">
+                  <p className="truncate text-sm font-medium text-slate-950">{userName ?? userEmail}</p>
+                </div>
                 <button
                   type="button"
                   onClick={handleLogout}

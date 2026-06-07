@@ -50,11 +50,11 @@ export default function RegisterPage() {
 
       if (typeof window !== "undefined") {
         if (data.token) {
-          localStorage.setItem("promptbase_token", data.token);
+          localStorage.setItem("token", data.token);
         }
 
         if (data.user) {
-          localStorage.setItem("promptbase_user", JSON.stringify(data.user));
+          localStorage.setItem("user", JSON.stringify(data.user));
         }
       }
 

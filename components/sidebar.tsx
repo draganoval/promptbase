@@ -25,7 +25,7 @@ export function Sidebar({ activeHref }: SidebarProps) {
 
     try {
       const parsedUser = JSON.parse(savedUser) as { role?: string };
-      setRole(parsedUser.role ?? null);
+      setRole(parsedUser.role?.toLowerCase() ?? null);
     } catch {
       setRole(null);
     }
