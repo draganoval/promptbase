@@ -44,7 +44,7 @@ type LoginResponse = {
   };
 };
 
-const BASE_URL = 'https://promptbase-nvg7owb5y-l-drgnv-s-projects.vercel.app';
+const BASE_URL = "https://promptbase-beige.vercel.app";
 const LOGIN_URL = `${BASE_URL}/api/auth/login`;
 const PROMPTS_URL = `${BASE_URL}/api/prompts?page=1&limit=20`;
 const FAVORITES_URL = `${BASE_URL}/api/favorites`;
