@@ -63,15 +63,32 @@ function normalizePrompts(payload: unknown): Prompt[] {
 
   if (payload && typeof payload === 'object') {
     const data = payload as {
+      favorites?: unknown;
       prompts?: unknown;
       items?: unknown;
       data?: unknown;
       results?: unknown;
     };
 
-    for (const value of [data.prompts, data.items, data.data, data.results]) {
+    for (const value of [data.favorites, data.prompts, data.items, data.data, data.results]) {
       if (Array.isArray(value)) {
         return value as Prompt[];
+      }
+
+      if (value && typeof value === 'object') {
+        const nested = value as {
+          favorites?: unknown;
+          prompts?: unknown;
+          items?: unknown;
+          data?: unknown;
+          results?: unknown;
+        };
+
+        for (const nestedValue of [nested.favorites, nested.prompts, nested.items, nested.data, nested.results]) {
+          if (Array.isArray(nestedValue)) {
+            return nestedValue as Prompt[];
+          }
+        }
       }
     }
   }
@@ -104,6 +121,9 @@ export default function HomeScreen() {
   const [selectedPrompt, setSelectedPrompt] = useState<Prompt | null>(null);
   const [favoritesBusy, setFavoritesBusy] = useState(false);
   const [favoritesError, setFavoritesError] = useState('');
+  const [favoriteBusy, setFavoriteBusy] = useState(false);
+  const [favoriteMessage, setFavoriteMessage] = useState('');
+  const [favoriteError, setFavoriteError] = useState('');
 
   function buildHeaders(accessToken?: string) {
     const headers: Record<string, string> = {
@@ -150,6 +170,7 @@ export default function HomeScreen() {
       });
 
       const payload = await response.json().catch(() => ({}));
+      console.log('Favorites API response:', payload);
 
       if (!response.ok) {
         throw new Error('Unable to load favorites');
@@ -201,7 +222,63 @@ export default function HomeScreen() {
   function openPromptDetails(prompt: Prompt, source: Exclude<ScreenName, 'details'>) {
     setPreviousScreen(source);
     setSelectedPrompt(prompt);
+    setFavoriteMessage('');
+    setFavoriteError('');
     setScreen('details');
+  }
+
+  async function favoritePrompt() {
+    if (!selectedPrompt) {
+      return;
+    }
+
+    const promptId = selectedPrompt.id;
+
+    if (promptId === undefined || promptId === null) {
+      setFavoriteError('This prompt cannot be favorited because it does not have an id.');
+      setFavoriteMessage('');
+      return;
+    }
+
+    setFavoriteBusy(true);
+    setFavoriteError('');
+    setFavoriteMessage('');
+
+    try {
+      const response = await fetch(FAVORITES_URL, {
+        method: 'POST',
+        headers: buildHeaders(token),
+        body: JSON.stringify({ promptId }),
+      });
+
+      const payload = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        const errorMessage =
+          (payload as { message?: string; error?: string })?.message ??
+          (payload as { message?: string; error?: string })?.error ??
+          'Unable to favorite prompt';
+        throw new Error(errorMessage);
+      }
+
+      const nextFavorite = {
+        ...selectedPrompt,
+        isFavorite: true,
+      };
+
+      setSelectedPrompt(nextFavorite);
+      setPrompts((currentPrompts) =>
+        currentPrompts.map((prompt) =>
+          samePrompt(prompt, selectedPrompt) ? { ...prompt, isFavorite: true } : prompt,
+        ),
+      );
+      setFavoriteMessage('Added to favorites.');
+      await loadFavorites(token);
+    } catch (error) {
+      setFavoriteError(error instanceof Error ? error.message : 'Unable to favorite prompt');
+    } finally {
+      setFavoriteBusy(false);
+    }
   }
 
   function goTo(screenName: Exclude<ScreenName, 'details'>) {
@@ -228,6 +305,8 @@ export default function HomeScreen() {
     setFavorites([]);
     setSelectedPrompt(null);
     setLoginForm({ email: '', password: '' });
+    setFavoriteMessage('');
+    setFavoriteError('');
     setScreen('login');
   }
 
@@ -324,7 +403,13 @@ export default function HomeScreen() {
               <Card>
                 <Pressable
                   style={styles.backButton}
-                  onPress={() => setScreen(previousScreen ?? 'prompts')}
+                  onPress={() => {
+                    if (previousScreen === 'favorites') {
+                      void loadFavorites();
+                    }
+
+                    setScreen(previousScreen ?? 'prompts');
+                  }}
                 >
                   <Text style={styles.backButtonText}>Back</Text>
                 </Pressable>
@@ -339,6 +424,21 @@ export default function HomeScreen() {
                 <Section label="Content" value={currentPrompt?.content ?? 'No content available.'} />
                 <Section label="Tags" value={formatTags(currentPrompt?.tags)} />
                 <Section label="Favorite" value={currentPrompt?.isFavorite ? 'Yes' : 'No'} />
+                {favoriteMessage ? <Text style={styles.successText}>{favoriteMessage}</Text> : null}
+                {favoriteError ? <Text style={styles.errorText}>{favoriteError}</Text> : null}
+                <Pressable
+                  style={styles.favoriteButton}
+                  onPress={favoritePrompt}
+                  disabled={favoriteBusy || Boolean(currentPrompt?.isFavorite)}
+                >
+                  {favoriteBusy ? (
+                    <ActivityIndicator color="#0F172A" />
+                  ) : (
+                    <Text style={styles.favoriteButtonText}>
+                      {currentPrompt?.isFavorite ? 'Favorited' : 'Favorite'}
+                    </Text>
+                  )}
+                </Pressable>
               </Card>
             </ScrollView>
           ) : null}
@@ -470,6 +570,21 @@ function formatTags(tags: Prompt['tags']) {
   }
 
   return tags.join(', ');
+}
+
+function promptIdentifier(prompt: Prompt | null) {
+  return prompt?.id ?? prompt?.title ?? null;
+}
+
+function samePrompt(left: Prompt, right: Prompt | null) {
+  const leftIdentifier = promptIdentifier(left);
+  const rightIdentifier = promptIdentifier(right);
+
+  if (leftIdentifier === null || rightIdentifier === null) {
+    return false;
+  }
+
+  return String(leftIdentifier) === String(rightIdentifier);
 }
 
 const styles = StyleSheet.create({
@@ -610,8 +725,25 @@ const styles = StyleSheet.create({
     color: '#0F172A',
     fontWeight: '800',
   },
+  favoriteButton: {
+    marginTop: 14,
+    backgroundColor: '#D9EAFE',
+    borderRadius: 16,
+    paddingVertical: 14,
+    alignItems: 'center',
+  },
+  favoriteButtonText: {
+    color: '#0F172A',
+    fontWeight: '800',
+  },
   errorText: {
     color: '#B91C1C',
+    marginBottom: 12,
+    fontWeight: '600',
+  },
+  successText: {
+    color: '#166534',
+    marginTop: 12,
     marginBottom: 12,
     fontWeight: '600',
   },
