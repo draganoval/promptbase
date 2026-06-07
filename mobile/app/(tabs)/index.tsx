@@ -44,9 +44,10 @@ type LoginResponse = {
   };
 };
 
-const LOGIN_URL = 'http://192.168.0.138:3000/api/auth/login';
-const PROMPTS_URL = 'http://192.168.0.138:3000/api/prompts?page=1&limit=20';
-const FAVORITES_URL = 'http://192.168.0.138:3000/api/favorites';
+const BASE_URL = 'https://promptbase-nvg7owb5y-l-drgnv-s-projects.vercel.app';
+const LOGIN_URL = `${BASE_URL}/api/auth/login`;
+const PROMPTS_URL = `${BASE_URL}/api/prompts?page=1&limit=20`;
+const FAVORITES_URL = `${BASE_URL}/api/favorites`;
 
 const screenLabels: Record<ScreenName, string> = {
   login: 'Login',
