@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 
 import { db } from "@/db";
 import { prompts } from "@/db/schema";
+import { getCurrentUserId, isPromptFavoritedByUser } from "@/lib/favorites-api";
 import {
   ensureCategoryExists,
   getPromptById,
@@ -34,7 +35,10 @@ export async function GET(_request: Request, context: RouteContext) {
       return NextResponse.json({ error: "Prompt not found." }, { status: 404 });
     }
 
-    return NextResponse.json({ prompt });
+    const userId = await getCurrentUserId();
+    const isFavorited = userId ? await isPromptFavoritedByUser(userId, promptId) : false;
+
+    return NextResponse.json({ prompt: { ...prompt, isFavorited } });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unable to fetch prompt.";
     return NextResponse.json({ error: message }, { status: 500 });

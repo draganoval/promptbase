@@ -22,6 +22,7 @@ type PromptDetails = {
   categoryName: string | null;
   authorName: string | null;
   authorRole: string | null;
+  isFavorited?: boolean;
 };
 
 function getPromptId(param: string | string[] | undefined) {
@@ -64,6 +65,7 @@ export default function PromptDetailsPage() {
   const [prompt, setPrompt] = useState<PromptDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
+  const [favoriting, setFavoriting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
@@ -138,6 +140,50 @@ export default function PromptDetailsPage() {
     }
   }
 
+  async function handleFavoriteToggle() {
+    if (!prompt) {
+      return;
+    }
+
+    setFavoriting(true);
+    setErrorMessage("");
+    setSuccessMessage("");
+
+    try {
+      const response = await fetch(
+        prompt.isFavorited ? `/api/favorites/${prompt.id}` : "/api/favorites",
+        prompt.isFavorited
+          ? {
+              method: "DELETE",
+            }
+          : {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ promptId: prompt.id }),
+            }
+      );
+
+      const data = (await response.json()) as { error?: string; message?: string };
+
+      if (!response.ok) {
+        throw new Error(data.error ?? "Unable to update favorite state.");
+      }
+
+      setPrompt((currentPrompt) =>
+        currentPrompt ? { ...currentPrompt, isFavorited: !currentPrompt.isFavorited } : currentPrompt
+      );
+      setSuccessMessage(data.message ?? "Favorite updated successfully.");
+    } catch (favoriteError) {
+      setErrorMessage(
+        favoriteError instanceof Error ? favoriteError.message : "Unable to update favorite state."
+      );
+    } finally {
+      setFavoriting(false);
+    }
+  }
+
   const promptCard = prompt
     ? {
         slug: String(prompt.id),
@@ -165,6 +211,13 @@ export default function PromptDetailsPage() {
           <>
             <Button href={prompt ? `/prompts/${prompt.id}/edit` : "/library"} variant="secondary">
               Edit prompt
+            </Button>
+            <Button onClick={handleFavoriteToggle} disabled={favoriting || loading} variant="secondary">
+              {favoriting
+                ? "Saving..."
+                : prompt?.isFavorited
+                  ? "Unfavorite prompt"
+                  : "Favorite prompt"}
             </Button>
             <Button onClick={handleDelete} disabled={deleting || loading}>
               {deleting ? "Deleting..." : "Delete prompt"}
