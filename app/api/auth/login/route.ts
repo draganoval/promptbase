@@ -1,6 +1,5 @@
-import { NextResponse } from "next/server";
-
 import { loginUser, signAuthToken, toPublicUser } from "@/lib/auth";
+import { corsNoContent, corsResponse } from "@/lib/cors";
 
 type LoginRequestBody = {
   email?: string;
@@ -14,7 +13,7 @@ export async function POST(request: Request) {
     const password = body.password ?? "";
 
     if (!email || !password) {
-      return NextResponse.json(
+      return corsResponse(
         { error: "Email and password are required." },
         { status: 400 }
       );
@@ -27,7 +26,7 @@ export async function POST(request: Request) {
       role: user.role,
     });
 
-    return NextResponse.json({
+    return corsResponse({
       message: "Login successful.",
       user: toPublicUser(user),
       token,
@@ -35,6 +34,10 @@ export async function POST(request: Request) {
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unable to login.";
 
-    return NextResponse.json({ error: message }, { status: 401 });
+    return corsResponse({ error: message }, { status: 401 });
   }
+}
+
+export async function OPTIONS() {
+  return corsNoContent();
 }

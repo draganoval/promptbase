@@ -4,6 +4,7 @@ import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { prompts } from "@/db/schema";
 import { verifyAuthToken } from "@/lib/auth";
+import { corsNoContent, corsResponse } from "@/lib/cors";
 import { getCurrentUserId, isPromptFavoritedByUser } from "@/lib/favorites-api";
 import {
   ensureCategoryExists,
@@ -27,22 +28,22 @@ export async function GET(_request: Request, context: RouteContext) {
     const promptId = parsePromptId(id);
 
     if (!promptId) {
-      return NextResponse.json({ error: "Invalid prompt id." }, { status: 400 });
+      return corsResponse({ error: "Invalid prompt id." }, { status: 400 });
     }
 
     const prompt = await getPromptById(promptId);
 
     if (!prompt) {
-      return NextResponse.json({ error: "Prompt not found." }, { status: 404 });
+      return corsResponse({ error: "Prompt not found." }, { status: 404 });
     }
 
     const userId = await getCurrentUserId();
     const isFavorited = userId ? await isPromptFavoritedByUser(userId, promptId) : false;
 
-    return NextResponse.json({ prompt: { ...prompt, isFavorited } });
+    return corsResponse({ prompt: { ...prompt, isFavorited } });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unable to fetch prompt.";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return corsResponse({ error: message }, { status: 500 });
   }
 }
 
@@ -52,7 +53,7 @@ export async function PUT(request: Request, context: RouteContext) {
     const promptId = parsePromptId(id);
 
     if (!promptId) {
-      return NextResponse.json({ error: "Invalid prompt id." }, { status: 400 });
+      return corsResponse({ error: "Invalid prompt id." }, { status: 400 });
     }
 
     const body = await request.json();
@@ -60,11 +61,11 @@ export async function PUT(request: Request, context: RouteContext) {
     const validationError = validatePromptInput(input);
 
     if (validationError) {
-      return NextResponse.json({ error: validationError }, { status: 400 });
+      return corsResponse({ error: validationError }, { status: 400 });
     }
 
     if (!(await ensureCategoryExists(input.categoryId as number))) {
-      return NextResponse.json({ error: "Category not found." }, { status: 404 });
+      return corsResponse({ error: "Category not found." }, { status: 404 });
     }
 
     const [updatedPrompt] = await db
@@ -80,16 +81,16 @@ export async function PUT(request: Request, context: RouteContext) {
       .returning();
 
     if (!updatedPrompt) {
-      return NextResponse.json({ error: "Prompt not found." }, { status: 404 });
+      return corsResponse({ error: "Prompt not found." }, { status: 404 });
     }
 
-    return NextResponse.json({
+    return corsResponse({
       message: "Prompt updated successfully.",
       prompt: updatedPrompt,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unable to update prompt.";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return corsResponse({ error: message }, { status: 500 });
   }
 }
 
@@ -102,11 +103,11 @@ export async function DELETE(_request: Request, context: RouteContext) {
       const payload = verifyAuthToken(token);
 
       if (!payload) {
-        return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+        return corsResponse({ error: "Unauthorized." }, { status: 401 });
       }
 
       if (payload.role !== "admin") {
-        return NextResponse.json({ error: "Forbidden." }, { status: 403 });
+        return corsResponse({ error: "Forbidden." }, { status: 403 });
       }
     }
 
@@ -114,7 +115,7 @@ export async function DELETE(_request: Request, context: RouteContext) {
     const promptId = parsePromptId(id);
 
     if (!promptId) {
-      return NextResponse.json({ error: "Invalid prompt id." }, { status: 400 });
+      return corsResponse({ error: "Invalid prompt id." }, { status: 400 });
     }
 
     const [deletedPrompt] = await db
@@ -123,15 +124,19 @@ export async function DELETE(_request: Request, context: RouteContext) {
       .returning({ id: prompts.id });
 
     if (!deletedPrompt) {
-      return NextResponse.json({ error: "Prompt not found." }, { status: 404 });
+      return corsResponse({ error: "Prompt not found." }, { status: 404 });
     }
 
-    return NextResponse.json({
+    return corsResponse({
       message: "Prompt deleted successfully.",
       id: deletedPrompt.id,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unable to delete prompt.";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return corsResponse({ error: message }, { status: 500 });
   }
+}
+
+export async function OPTIONS() {
+  return corsNoContent();
 }

@@ -1,8 +1,8 @@
-import { NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 
 import { db } from "@/db";
 import { users } from "@/db/schema";
+import { corsNoContent, corsResponse } from "@/lib/cors";
 
 type RouteContext = {
   params: Promise<{ id: string }>;
@@ -19,14 +19,14 @@ export async function PATCH(request: Request, context: RouteContext) {
     const userId = parseUserId(id);
 
     if (!userId) {
-      return NextResponse.json({ error: "Invalid user id." }, { status: 400 });
+      return corsResponse({ error: "Invalid user id." }, { status: 400 });
     }
 
     const body = (await request.json()) as { role?: unknown };
     const role = typeof body.role === "string" ? body.role.trim().toLowerCase() : "";
 
     if (role !== "user" && role !== "admin") {
-      return NextResponse.json({ error: "Role must be 'user' or 'admin'." }, { status: 400 });
+      return corsResponse({ error: "Role must be 'user' or 'admin'." }, { status: 400 });
     }
 
     const [updatedUser] = await db
@@ -42,12 +42,16 @@ export async function PATCH(request: Request, context: RouteContext) {
       });
 
     if (!updatedUser) {
-      return NextResponse.json({ error: "User not found." }, { status: 404 });
+      return corsResponse({ error: "User not found." }, { status: 404 });
     }
 
-    return NextResponse.json({ message: "Role updated successfully.", user: updatedUser });
+    return corsResponse({ message: "Role updated successfully.", user: updatedUser });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unable to update user role.";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return corsResponse({ error: message }, { status: 500 });
   }
+}
+
+export async function OPTIONS() {
+  return corsNoContent();
 }

@@ -1,5 +1,3 @@
-import { NextResponse } from "next/server";
-
 import {
   ensureCategoryExists,
   getFirstUserId,
@@ -9,6 +7,7 @@ import {
 } from "@/lib/prompt-api";
 import { db } from "@/db";
 import { prompts } from "@/db/schema";
+import { corsNoContent, corsResponse } from "@/lib/cors";
 
 export async function GET(request: Request) {
   try {
@@ -18,10 +17,10 @@ export async function GET(request: Request) {
 
     const result = await listPrompts(page, limit);
 
-    return NextResponse.json(result);
+    return corsResponse(result);
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unable to fetch prompts.";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return corsResponse({ error: message }, { status: 500 });
   }
 }
 
@@ -32,17 +31,17 @@ export async function POST(request: Request) {
     const validationError = validatePromptInput(input);
 
     if (validationError) {
-      return NextResponse.json({ error: validationError }, { status: 400 });
+      return corsResponse({ error: validationError }, { status: 400 });
     }
 
     if (!(await ensureCategoryExists(input.categoryId as number))) {
-      return NextResponse.json({ error: "Category not found." }, { status: 404 });
+      return corsResponse({ error: "Category not found." }, { status: 404 });
     }
 
     const authorId = await getFirstUserId();
 
     if (!authorId) {
-      return NextResponse.json({ error: "No users found to assign as author." }, { status: 400 });
+      return corsResponse({ error: "No users found to assign as author." }, { status: 400 });
     }
 
     const [createdPrompt] = await db
@@ -57,12 +56,16 @@ export async function POST(request: Request) {
       })
       .returning();
 
-    return NextResponse.json({
+    return corsResponse({
       message: "Prompt created successfully.",
       prompt: createdPrompt,
     }, { status: 201 });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unable to create prompt.";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return corsResponse({ error: message }, { status: 500 });
   }
+}
+
+export async function OPTIONS() {
+  return corsNoContent();
 }

@@ -1,5 +1,3 @@
-import { NextResponse } from "next/server";
-
 import { db } from "@/db";
 import { prompts } from "@/db/schema";
 import {
@@ -8,6 +6,7 @@ import {
   getFavoritePromptsForUser,
 } from "@/lib/favorites-api";
 import { eq } from "drizzle-orm";
+import { corsNoContent, corsResponse } from "@/lib/cors";
 
 function parsePromptId(value: unknown) {
   const parsed = typeof value === "string" || typeof value === "number" ? Number(value) : NaN;
@@ -19,15 +18,15 @@ export async function GET() {
     const userId = await getCurrentUserId();
 
     if (!userId) {
-      return NextResponse.json({ error: "No users found." }, { status: 400 });
+      return corsResponse({ error: "No users found." }, { status: 400 });
     }
 
     const favorites = await getFavoritePromptsForUser(userId);
 
-    return NextResponse.json({ favorites });
+    return corsResponse({ favorites });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unable to fetch favorites.";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return corsResponse({ error: message }, { status: 500 });
   }
 }
 
@@ -36,25 +35,25 @@ export async function POST(request: Request) {
     const userId = await getCurrentUserId();
 
     if (!userId) {
-      return NextResponse.json({ error: "No users found." }, { status: 400 });
+      return corsResponse({ error: "No users found." }, { status: 400 });
     }
 
     const body = (await request.json()) as { promptId?: unknown };
     const promptId = parsePromptId(body.promptId);
 
     if (!promptId) {
-      return NextResponse.json({ error: "Prompt ID is required." }, { status: 400 });
+      return corsResponse({ error: "Prompt ID is required." }, { status: 400 });
     }
 
     const [prompt] = await db.select({ id: prompts.id }).from(prompts).where(eq(prompts.id, promptId)).limit(1);
 
     if (!prompt) {
-      return NextResponse.json({ error: "Prompt not found." }, { status: 404 });
+      return corsResponse({ error: "Prompt not found." }, { status: 404 });
     }
 
     const result = await addFavoriteForUser(userId, promptId);
 
-    return NextResponse.json(
+    return corsResponse(
       {
         message: result.created ? "Prompt added to favorites." : "Prompt is already favorited.",
         favoriteId: result.id,
@@ -63,6 +62,10 @@ export async function POST(request: Request) {
     );
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unable to add favorite.";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return corsResponse({ error: message }, { status: 500 });
   }
+}
+
+export async function OPTIONS() {
+  return corsNoContent();
 }

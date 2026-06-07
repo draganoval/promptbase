@@ -1,6 +1,5 @@
-import { NextResponse } from "next/server";
-
 import { registerUser, signAuthToken, toPublicUser } from "@/lib/auth";
+import { corsNoContent, corsResponse } from "@/lib/cors";
 
 type RegisterRequestBody = {
   name?: string;
@@ -16,7 +15,7 @@ export async function POST(request: Request) {
     const password = body.password ?? "";
 
     if (!name || !email || !password) {
-      return NextResponse.json(
+      return corsResponse(
         { error: "Name, email, and password are required." },
         { status: 400 }
       );
@@ -29,7 +28,7 @@ export async function POST(request: Request) {
       role: user.role,
     });
 
-    return NextResponse.json(
+    return corsResponse(
       {
         message: "User registered successfully.",
         user: toPublicUser(user),
@@ -40,6 +39,10 @@ export async function POST(request: Request) {
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unable to register user.";
 
-    return NextResponse.json({ error: message }, { status: 400 });
+    return corsResponse({ error: message }, { status: 400 });
   }
+}
+
+export async function OPTIONS() {
+  return corsNoContent();
 }

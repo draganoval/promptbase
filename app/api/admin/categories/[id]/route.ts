@@ -1,6 +1,5 @@
-import { NextResponse } from "next/server";
-
 import { deleteAdminCategory } from "@/lib/admin-api";
+import { corsNoContent, corsResponse } from "@/lib/cors";
 
 type RouteContext = {
   params: Promise<{ id: string }>;
@@ -17,21 +16,25 @@ export async function DELETE(_request: Request, context: RouteContext) {
     const categoryId = parseCategoryId(id);
 
     if (!categoryId) {
-      return NextResponse.json({ error: "Invalid category id." }, { status: 400 });
+      return corsResponse({ error: "Invalid category id." }, { status: 400 });
     }
 
     const result = await deleteAdminCategory(categoryId);
 
     if (!result.deleted) {
-      return NextResponse.json(
+      return corsResponse(
         { error: "Category cannot be deleted because it is used by prompts." },
         { status: 400 }
       );
     }
 
-    return NextResponse.json({ message: "Category deleted successfully.", id: categoryId });
+    return corsResponse({ message: "Category deleted successfully.", id: categoryId });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unable to delete category.";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return corsResponse({ error: message }, { status: 500 });
   }
+}
+
+export async function OPTIONS() {
+  return corsNoContent();
 }
