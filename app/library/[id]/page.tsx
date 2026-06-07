@@ -68,6 +68,23 @@ export default function PromptDetailsPage() {
   const [favoriting, setFavoriting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    const savedUser = window.localStorage.getItem("user");
+
+    if (!savedUser) {
+      setIsAdmin(false);
+      return;
+    }
+
+    try {
+      const parsedUser = JSON.parse(savedUser) as { role?: string };
+      setIsAdmin(parsedUser.role?.toLowerCase() === "admin");
+    } catch {
+      setIsAdmin(false);
+    }
+  }, []);
 
   useEffect(() => {
     if (!id) {
@@ -219,9 +236,11 @@ export default function PromptDetailsPage() {
                   ? "Unfavorite prompt"
                   : "Favorite prompt"}
             </Button>
-            <Button onClick={handleDelete} disabled={deleting || loading}>
-              {deleting ? "Deleting..." : "Delete prompt"}
-            </Button>
+            {isAdmin ? (
+              <Button onClick={handleDelete} disabled={deleting || loading}>
+                {deleting ? "Deleting..." : "Delete prompt"}
+              </Button>
+            ) : null}
           </>
         }
       />

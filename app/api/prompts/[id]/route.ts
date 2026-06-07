@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 
 import { db } from "@/db";
 import { prompts } from "@/db/schema";
+import { verifyAuthToken } from "@/lib/auth";
 import { getCurrentUserId, isPromptFavoritedByUser } from "@/lib/favorites-api";
 import {
   ensureCategoryExists,
@@ -94,6 +95,21 @@ export async function PUT(request: Request, context: RouteContext) {
 
 export async function DELETE(_request: Request, context: RouteContext) {
   try {
+    const authorizationHeader = _request.headers.get("authorization");
+
+    if (authorizationHeader?.toLowerCase().startsWith("bearer ")) {
+      const token = authorizationHeader.slice(7).trim();
+      const payload = verifyAuthToken(token);
+
+      if (!payload) {
+        return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+      }
+
+      if (payload.role !== "admin") {
+        return NextResponse.json({ error: "Forbidden." }, { status: 403 });
+      }
+    }
+
     const { id } = await context.params;
     const promptId = parsePromptId(id);
 

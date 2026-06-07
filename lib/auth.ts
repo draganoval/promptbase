@@ -64,6 +64,14 @@ export function signAuthToken(payload: AuthTokenPayload) {
   return jwt.sign(payload, getJwtSecret(), { expiresIn: "7d" });
 }
 
+export function verifyAuthToken(token: string) {
+  try {
+    return jwt.verify(token, getJwtSecret()) as AuthTokenPayload;
+  } catch {
+    return null;
+  }
+}
+
 export async function findUserByEmail(email: string) {
   const normalizedEmail = normalizeEmail(email);
   const [user] = await db
